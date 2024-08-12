@@ -1,3 +1,9 @@
+/*
+ * Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
+ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+ * SPDX-License-Identifier: BSD-3-Clause-Clear
+*/
+
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <err.h>
@@ -93,7 +99,7 @@ static int qdl_try_open(libusb_device *dev, struct qdl_device *qdl, const char *
 			endpoint = &ifc->endpoint[l];
 
 			type = endpoint->bmAttributes & LIBUSB_TRANSFER_TYPE_MASK;
-			if (type != LIBUSB_ENDPOINT_TRANSFER_TYPE_BULK)
+			if (type != LIBUSB_TRANSFER_TYPE_BULK)
 				continue;
 
 			if (endpoint->bEndpointAddress & LIBUSB_ENDPOINT_IN) {
@@ -163,7 +169,7 @@ static int qdl_try_open(libusb_device *dev, struct qdl_device *qdl, const char *
 	return 0;
 }
 
-int qdl_open(struct qdl_device *qdl, const char *serial)
+int qdl_open_usb(struct qdl_device *qdl, const char *serial)
 {
 	struct libusb_device **devs;
 	struct libusb_device *dev;
@@ -208,7 +214,7 @@ int qdl_open(struct qdl_device *qdl, const char *serial)
 	return -1;
 }
 
-int qdl_read(struct qdl_device *qdl, void *buf, size_t len, unsigned int timeout)
+int qdl_read_usb(struct qdl_device *qdl, void *buf, size_t len, unsigned int timeout)
 {
 	int actual;
 	int ret;
@@ -221,7 +227,7 @@ int qdl_read(struct qdl_device *qdl, void *buf, size_t len, unsigned int timeout
 	return actual;
 }
 
-int qdl_write(struct qdl_device *qdl, const void *buf, size_t len)
+int qdl_write_usb(struct qdl_device *qdl, const void *buf, size_t len)
 {
 	unsigned char *data = (unsigned char*) buf;
 	unsigned int count = 0;

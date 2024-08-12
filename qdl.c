@@ -28,6 +28,10 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * ​​​​​Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
+ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+ * SPDX-License-Identifier: BSD-3-Clause-Clear
  */
 #include <err.h>
 #include <errno.h>
@@ -56,6 +60,23 @@ enum {
 
 bool qdl_debug;
 static struct qdl_device qdl;
+
+
+int (*qdl_open_ptr)(struct qdl_device *qdl, const char *serial);
+int (*qdl_read_ptr)(struct qdl_device *qdl, void *buf, size_t len, unsigned int timeout);
+int (*qdl_write_ptr)(struct qdl_device *qdl, const void *buf, size_t len);
+
+inline int qdl_open(struct qdl_device *qdl, const char *serial){return (*qdl_open_ptr)(qdl, serial);}
+inline int qdl_read(struct qdl_device *qdl, void *buf, size_t len, unsigned int timeout){return (*qdl_read_ptr)(qdl, buf, len, timeout);}
+inline int qdl_write(struct qdl_device *qdl, const void *buf, size_t len){return (*qdl_write_ptr)(qdl, buf, len);}
+
+extern int qdl_open_usb(struct qdl_device *qdl, const char *serial);
+extern int qdl_read_usb(struct qdl_device *qdl, void *buf, size_t len, unsigned int timeout);
+extern int qdl_write_usb(struct qdl_device *qdl, const void *buf, size_t len);
+
+extern int qdl_open_pcie(struct qdl_device *qdl, const char *serial);
+extern int qdl_read_pcie(struct qdl_device *qdl, void *buf, size_t len, unsigned int timeout);
+extern int qdl_write_pcie(struct qdl_device *qdl, const void *buf, size_t len);
 
 static int detect_type(const char *xml_file)
 {
@@ -103,7 +124,7 @@ static void print_usage(void)
 {
 	extern const char *__progname;
 	fprintf(stderr,
-		"%s [--debug] [--storage <emmc|nand|ufs>] [--finalize-provisioning] [--include <PATH>] <prog.mbn> [<program> <patch> ...]\n",
+		"%s [--debug] [--storage <emmc|nand|ufs>] [--finalize-provisioning] [--include <PATH>] [--channel <pcie|usb>] [prog_mbn] [<program> <patch> ...]\n",
 		__progname);
 }
 
@@ -113,7 +134,7 @@ enum {
 
 int main(int argc, char **argv)
 {
-	char *prog_mbn, *storage="ufs";
+	char *prog_mbn, *storage="ufs", *channel="usb";
 	char *incdir = NULL;
 	char *serial = NULL;
 	int type;
@@ -129,6 +150,7 @@ int main(int argc, char **argv)
 		{"out-chunk-size", required_argument, 0, OPT_OUT_CHUNK_SIZE },
 		{"serial", required_argument, 0, 'S'},
 		{"storage", required_argument, 0, 's'},
+		{"channel", required_argument, 0, 'c'},
 		{0, 0, 0, 0}
 	};
 
@@ -153,6 +175,9 @@ int main(int argc, char **argv)
 		case 'S':
 			serial = optarg;
 			break;
+		case 'c':
+			channel = optarg;
+			break;
 		default:
 			print_usage();
 			return 1;
@@ -165,7 +190,25 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	prog_mbn = argv[optind++];
+	//set the handlers
+	if(strcmp(channel, "pcie") != 0)
+	{
+		qdl_open_ptr = &qdl_open_usb;
+		qdl_read_ptr = &qdl_read_usb;
+		qdl_write_ptr = &qdl_write_usb;
+	}
+	else
+	{
+		qdl_open_ptr = &qdl_open_pcie;
+		qdl_read_ptr = &qdl_read_pcie;
+		qdl_write_ptr = &qdl_write_pcie;
+	}
+	
+
+	if(strcmp(channel, "pcie") != 0)
+	{
+		prog_mbn = argv[optind++];
+	}
 
 	do {
 		type = detect_type(argv[optind]);
@@ -203,10 +246,13 @@ int main(int argc, char **argv)
 	if (ret)
 		return 1;
 
-	qdl.mappings[0] = prog_mbn;
-	ret = sahara_run(&qdl, qdl.mappings, true, NULL, NULL);
-	if (ret < 0)
-		return 1;
+	if(strcmp(channel, "pcie") != 0)
+	{
+		qdl.mappings[0] = prog_mbn;
+		ret = sahara_run(&qdl, qdl.mappings, true, NULL, NULL);
+		if (ret < 0)
+			return 1;
+	}
 
 	ret = firehose_run(&qdl, incdir, storage);
 	if (ret < 0)

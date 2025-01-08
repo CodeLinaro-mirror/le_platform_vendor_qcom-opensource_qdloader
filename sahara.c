@@ -27,6 +27,10 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
+ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ * SPDX-License-Identifier: BSD-3-Clause-Clear
  */
 #include <sys/types.h>
 #include <assert.h>
@@ -404,6 +408,8 @@ static void sahara_debug64(struct qdl_device *qdl, struct sahara_pkt *pkt,
 		return;
 
 	table = malloc(read_req.debug64_req.length);
+        if (table == NULL)
+                return;
 
 	n = qdl_read(qdl, table, pkt->debug64_req.length, 1000);
 	if (n < 0)

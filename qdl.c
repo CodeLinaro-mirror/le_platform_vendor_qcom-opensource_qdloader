@@ -28,9 +28,9 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * ​​​​​Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause-Clear
  */
 #include <err.h>
@@ -134,7 +134,7 @@ enum {
 
 int main(int argc, char **argv)
 {
-	char *prog_mbn, *storage="ufs", *channel="usb";
+	char *prog_mbn = NULL, *storage="ufs", *channel="usb";
 	char *incdir = NULL;
 	char *serial = NULL;
 	int type;

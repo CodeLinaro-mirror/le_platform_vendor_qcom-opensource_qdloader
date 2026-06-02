@@ -421,8 +421,10 @@ static void sahara_debug64(struct qdl_device *qdl, struct sahara_pkt *pkt,
 		if (sahara_debug64_filter(table[i].filename, filter))
 			continue;
 
-		printf("%-2d: type 0x%" PRIx64 " address: 0x%" PRIx64 " length: 0x%" PRIx64 " region: %s filename: %s\n",
-		       i, table[i].type, table[i].addr, table[i].length, table[i].region, table[i].filename);
+		printf("%-2d: type 0x%" PRIx64 " address: 0x%" PRIx64 " length: 0x%" PRIx64 " region: %.*s filename: %.*s\n",
+		       i, table[i].type, table[i].addr, table[i].length,
+		       (int)sizeof(table[i].region), table[i].region,
+		       (int)sizeof(table[i].filename), table[i].filename);
 
 
 		n = sahara_debug64_one(qdl, table[i], ramdump_dir);

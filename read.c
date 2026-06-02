@@ -69,6 +69,8 @@ int read_op_load(const char *read_op_file)
 		errors = 0;
 
 		read_op = calloc(1, sizeof(struct read_op));
+		if (!read_op)
+			return -ENOMEM;
 
 		read_op->sector_size = attr_as_unsigned(node, "SECTOR_SIZE_IN_BYTES", &errors);
 		read_op->filename = attr_as_string(node, "filename", &errors);
@@ -117,7 +119,7 @@ int read_op_execute(struct qdl_device *qdl, int (*apply)(struct qdl_device *qdl,
 
 		if (fd < 0) {
 			printf("Unable to open %s...\n", read_op->filename);
-			return ret;
+			return -errno;
 		}
 
 		ret = apply(qdl, read_op, fd);

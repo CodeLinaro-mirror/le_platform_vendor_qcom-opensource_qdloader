@@ -68,6 +68,8 @@ struct ufs_common *ufs_parse_common_params(xmlNode *node, bool finalize_provisio
 	int errors;
 
 	result = calloc(1, sizeof(struct ufs_common));
+	if (!result)
+		return NULL;
 	errors = 0;
 
 	result->bNumberLU = attr_as_unsigned(node, "bNumberLU", &errors);
@@ -95,6 +97,8 @@ struct ufs_body *ufs_parse_body(xmlNode *node)
 	int errors;
 
 	result = calloc(1, sizeof(struct ufs_body));
+	if (!result)
+		return NULL;
 	errors = 0;
 
 	result->LUNum = attr_as_unsigned(node, "LUNum", &errors);
@@ -123,6 +127,8 @@ struct ufs_epilogue *ufs_parse_epilogue(xmlNode *node)
 	int errors = 0;
 
 	result = calloc(1, sizeof(struct ufs_epilogue));
+	if (!result)
+		return NULL;
 
 	result->LUNtoGrow = attr_as_unsigned(node, "LUNtoGrow", &errors);
 
@@ -239,19 +245,18 @@ int ufs_load(const char *ufs_file, bool finalize_provisioning)
 		retval = -EINVAL;
 	}
 
-	if (retval){
-		if (ufs_common_p) {
+	if (retval) {
+		if (ufs_common_p)
 			free(ufs_common_p);
-		}
-		if (ufs_body_p) {
+		if (ufs_body_p)
 			free(ufs_body_p);
-		}
-		if (ufs_epilogue_p) {
+		if (ufs_epilogue_p)
 			free(ufs_epilogue_p);
-		}
 		fprintf(stderr, "[UFS] %s seems to be corrupted, ignore\n", ufs_file);
 		return retval;
 	}
+	if (!ufs_common_p)
+		return -EINVAL;
 	if (!finalize_provisioning != !ufs_common_p->bConfigDescrLock) {
 		fprintf(stderr,
 			"[UFS] Value bConfigDescrLock %d in file %s don't match command line parameter --finalize-provisioning %d\n"

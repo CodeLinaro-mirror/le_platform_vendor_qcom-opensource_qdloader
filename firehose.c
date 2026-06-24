@@ -41,6 +41,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,7 +62,7 @@ enum {
 static void xml_setpropf(xmlNode *node, const char *attr, const char *fmt, ...)
 {
 	xmlChar buf[128];
-	va_list ap;
+	va_list ap = {0};
 
 	va_start(ap, fmt);
 	vsnprintf((char*)buf, sizeof(buf), fmt, ap);
@@ -110,9 +111,12 @@ static int firehose_generic_parser(xmlNode *node, void *data)
 	value = xmlGetProp(node, (xmlChar*)"value");
 
 	if (xmlStrcmp(node->name, (xmlChar*)"log") == 0) {
-		printf("LOG: %s\n", value);
+		printf("LOG: %s\n", value ? (char *)value : "");
 		return -EAGAIN;
 	}
+
+	if (!value)
+		return -EINVAL;
 
 	if (xmlStrcmp(value, (xmlChar*)"ACK") == 0)
 		return FIREHOSE_ACK;
@@ -214,7 +218,7 @@ static int firehose_configure_response_parser(xmlNode *node, void *data)
 
 	value = xmlGetProp(node, (xmlChar*)"value");
 	if (xmlStrcmp(node->name, (xmlChar*)"log") == 0) {
-		printf("LOG: %s\n", value);
+		printf("LOG: %s\n", value ? (char *)value : "");
 		return -EAGAIN;
 	}
 
@@ -525,11 +529,11 @@ static int firehose_read_op(struct qdl_device *qdl, struct read_op *read_op, int
 	if (t) {
 		fprintf(stderr,
 			"[READ] read \"%s\" successfully at %ldkB/s\n",
-			read_op->filename,
+			read_op->filename ? read_op->filename : "(null)",
 			(unsigned long)read_op->sector_size * read_op->num_sectors / t / 1024);
 	} else {
 		fprintf(stderr, "[READ] read \"%s\" successfully\n",
-			read_op->filename);
+			read_op->filename ? read_op->filename : "(null)");
 	}
 
 out:

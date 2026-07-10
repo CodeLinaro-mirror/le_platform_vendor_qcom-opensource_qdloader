@@ -388,7 +388,7 @@ static bool sahara_debug64_filter(const char *filename, const char *filter)
 static void sahara_debug64(struct qdl_device *qdl, struct sahara_pkt *pkt,
 			   int ramdump_dir, const char *filter)
 {
-	struct sahara_debug_region64 *table;
+	struct sahara_debug_region64 *table = NULL;
 	struct sahara_pkt read_req;
 	ssize_t n;
 	int i;
@@ -408,19 +408,23 @@ static void sahara_debug64(struct qdl_device *qdl, struct sahara_pkt *pkt,
 		return;
 
 	table = malloc(read_req.debug64_req.length);
-        if (table == NULL)
-                return;
+	if (table == NULL)
+		return;
 
 	n = qdl_read(qdl, table, pkt->debug64_req.length, 1000);
-	if (n < 0)
+	if (n < 0) {
+		free(table);
 		return;
+	}
 
 	for (i = 0; i < pkt->debug64_req.length / sizeof(table[0]); i++) {
 		if (sahara_debug64_filter(table[i].filename, filter))
 			continue;
 
-		printf("%-2d: type 0x%" PRIx64 " address: 0x%" PRIx64 " length: 0x%" PRIx64 " region: %s filename: %s\n",
-		       i, table[i].type, table[i].addr, table[i].length, table[i].region, table[i].filename);
+		printf("%-2d: type 0x%" PRIx64 " address: 0x%" PRIx64 " length: 0x%" PRIx64 " region: %.*s filename: %.*s\n",
+		       i, table[i].type, table[i].addr, table[i].length,
+		       (int)sizeof(table[i].region), table[i].region,
+		       (int)sizeof(table[i].filename), table[i].filename);
 
 
 		n = sahara_debug64_one(qdl, table[i], ramdump_dir);

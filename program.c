@@ -53,7 +53,8 @@ static int load_erase_tag(xmlNode *node, bool is_nand)
 	}
 
 	program = calloc(1, sizeof(struct program));
-
+	if (!program)
+		return -ENOMEM;
 
 	program->is_nand = true;
 	program->is_erase = true;
@@ -86,6 +87,8 @@ static int load_program_tag(xmlNode *node, bool is_nand)
 	int errors = 0;
 
 	program = calloc(1, sizeof(struct program));
+	if (!program)
+		return -ENOMEM;
 
 	program->is_nand = is_nand;
 

@@ -67,6 +67,8 @@ int patch_load(const char *patch_file)
 		errors = 0;
 
 		patch = calloc(1, sizeof(struct patch));
+		if (!patch)
+			return -ENOMEM;
 
 		patch->sector_size = attr_as_unsigned(node, "SECTOR_SIZE_IN_BYTES", &errors);
 		patch->byte_offset = attr_as_unsigned(node, "byte_offset", &errors);

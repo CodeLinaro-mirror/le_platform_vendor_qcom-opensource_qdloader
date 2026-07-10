@@ -51,7 +51,7 @@ void print_hex_dump(const char *prefix, const void *buf, size_t len)
 	uint8_t ch;
 	char line[16 * 3 + 16 + 1];
 	int li;
-	int i;
+	size_t i;
 	int j;
 
 	for (i = 0; i < len; i += 16) {
@@ -71,7 +71,7 @@ void print_hex_dump(const char *prefix, const void *buf, size_t len)
 			line[li++] = ' ';
 		}
 
-		for (j = 0; j < linelen; j++) {
+		for (j = 0; j < linelen && li < (int)(sizeof(line) - 1); j++) {
 			ch = ptr[i + j];
 			line[li++] = isprint(ch) ? ch : '.';
 		}

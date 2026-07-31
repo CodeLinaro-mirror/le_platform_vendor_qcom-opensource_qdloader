@@ -364,8 +364,10 @@ static int firehose_program(struct qdl_device *qdl, struct program *program, int
 	}
 
 	buf = malloc(max_payload_size);
-	if (!buf)
-		err(1, "failed to allocate sector buffer");
+	if (!buf) {
+		warn("failed to allocate sector buffer");
+		return -ENOMEM;
+	}
 
 	doc = xmlNewDoc((xmlChar*)"1.0");
 	root = xmlNewNode(NULL, (xmlChar*)"data");
